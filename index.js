@@ -1,8 +1,5 @@
 const express = require('express')
-const cors = require('cors')
-
 const app = express()
-app.use(cors())
 
 const requestLogger = (request, response, next) => {
   console.log('Method:', request.method)
