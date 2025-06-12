@@ -10,6 +10,8 @@ const requestLogger = (request, response, next) => {
 }
 app.use(requestLogger)
 
+app.use(express.static('dist'))
+
 let notes = [
     {
         id: "1",
