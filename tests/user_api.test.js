@@ -14,7 +14,7 @@ describe('when there is initially one user in db', () => {
     await User.deleteMany({})
 
     const passwordHash = await bcrypt.hash('sekret', 10)
-    const user = new User({ username: 'root', passwordHash })
+    const user = new User({ username: 'root', name: 'Superuser', passwordHash })
 
     await user.save()
   })
@@ -60,6 +60,52 @@ describe('when there is initially one user in db', () => {
     assert(result.body.error.includes('expected `username` to be unique'))
 
     assert.strictEqual(usersAtEnd.length, usersAtStart.length)
+  })
+
+  test('succeeds with valid credentials', async () => {
+    const loginDetails = {
+      username: 'root',
+      password: 'sekret',
+    }
+    const response = await api
+      .post('/api/login')
+      .send(loginDetails)
+      .expect(200)
+      .expect('Content-Type', /application\/json/)
+
+    assert(response.body.token)
+    assert.strictEqual(response.body.username, 'root')
+    assert.strictEqual(response.body.name, 'Superuser')
+  })
+
+  test('fails with invalid password', async () => {
+    const loginDetails = {
+      username: 'root',
+      password: 'wrongpassword',
+    }
+    const response = await api
+      .post('/api/login')
+      .send(loginDetails)
+      .expect(401)
+      .expect('Content-Type', /application\/json/)
+
+    assert(response.body.error.includes('invalid username or password'))
+    assert(!response.body.token)
+  })
+
+  test('fails with non-existing user', async () => {
+    const loginDetails = {
+      username: 'nouser',
+      password: 'irrelevant',
+    }
+    const response = await api
+      .post('/api/login')
+      .send(loginDetails)
+      .expect(401)
+      .expect('Content-Type', /application\/json/)
+
+    assert(response.body.error.includes('invalid username or password'))
+    assert(!response.body.token)
   })
 })
 
